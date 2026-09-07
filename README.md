@@ -38,3 +38,15 @@ For a competitive service, separate the content catalog and 3D client from an au
 ## Current scope
 
 Five labs cover Base64 versus encryption, authentication-log correlation, broken object-level authorization, cleartext credential exposure, and incident containment. Prerequisite gates, XP, paid hints, debriefs, local save/resume, reset, extraction, and completion are included. This project has no accounts, real attack targets, hosted lab containers, multiplayer, or global leaderboard. Browser interaction/visual QA is separate from the automated logic, type, and build checks.
+
+## Camera views
+
+Use the on-screen camera selector or press V to switch between the original overhead view and a third-person follow camera. The preference saves on this device independently of mission progress. In third-person, WASD/arrows move relative to the camera; Q/R, the on-screen rotation buttons, or right-button dragging orbit the camera. The camera pulls in when facility geometry obstructs the player. Switching modes preserves player position and challenge progress, and cancels pending click-to-walk movement.
+
+## Documentation and GitHub hosting
+
+- [Complete project documentation](docs/PROJECT_DOCUMENTATION.md): controls, architecture, challenges, persistence, customization, testing, and production boundaries.
+- [GitHub hosting guide](docs/GITHUB_HOSTING.md): publish on GitHub Free, automatic deployment, manual upload, and hosting the links page independently.
+- [Personal website directory](public/websites/index.html): newsletter, portfolio, and Cipher Vault in one standalone HTML page.
+
+For GitHub Pages, run `npm run build:pages` and publish `dist-pages/`, or use the included `.github/workflows/deploy-pages.yml`. The existing `npm run build` remains the Sites/Worker target. Use Node.js 24 for both targets. `npm test` and `npm run typecheck` provide the standard checks. The local directory is available at `/websites/` and from the game header.

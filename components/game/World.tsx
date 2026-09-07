@@ -3,7 +3,8 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { challenges, isUnlocked } from '../../lib/challenges';
 
-export type WorldProps = { solved: string[]; paused: boolean; destination: [number, number] | null; onNear: (id: string | null) => void; onInteract: (id: string) => void; onError: () => void; movement: React.MutableRefObject<Set<string>> };
+export type CameraMode = 'overhead' | 'third-person';
+export type WorldProps = { cameraMode: CameraMode; solved: string[]; paused: boolean; destination: [number, number] | null; onNear: (id: string | null) => void; onInteract: (id: string) => void; onError: () => void; movement: React.MutableRefObject<Set<string>> };
 export default function World(props: WorldProps) {
   const host = useRef<HTMLDivElement>(null); const live = useRef(props); live.current = props;
   useEffect(() => {
@@ -57,7 +58,9 @@ export default function World(props: WorldProps) {
     }
     const exitGlow = mat('#415465'); box(4.4, .08, 3.2, 0, .07, 13, exitGlow); box(.35, 3.6, .35, -2.2, 1.8, 13.5, wall); box(.35, 3.6, .35, 2.2, 1.8, 13.5, wall); box(4.7, .35, .35, 0, 3.5, 13.5, exitGlow);
     label('EXTRACTION', '#a7c7d8', 0, 4.4, 13.5);
-    const player = new THREE.Group(); player.position.set(0, 0, 8.8); scene.add(player);
+    const cameraBlockers: THREE.Object3D[] = [];
+    scene.traverse(object => { if (object instanceof THREE.Mesh) cameraBlockers.push(object); });
+    const player = new THREE.Group(); player.position.set(0, 0, 8.8); player.rotation.y = Math.PI; scene.add(player);
     box(.65, .9, .48, 0, 1, 0, mat('#d4e9ef'), player); box(.52, .5, .48, 0, 1.72, 0, dark, player); box(.44, .16, .05, 0, 1.73, .255, mint, player);
     box(.22, .56, .28, -.2, .33, 0, trim, player); box(.22, .56, .28, .2, .33, 0, trim, player);
     box(.17, .7, .22, -.44, 1, 0, wall, player); box(.17, .7, .22, .44, 1, 0, wall, player);
@@ -65,22 +68,34 @@ export default function World(props: WorldProps) {
     const beamGeo = new THREE.ConeGeometry(.25, .5, 3); geometries.push(beamGeo); const beam = new THREE.Mesh(beamGeo, mint); beam.position.y = 2.6; beam.rotation.z = Math.PI; player.add(beam);
     const keys = live.current.movement.current; let target: THREE.Vector3 | null = null; let lastDestination = live.current.destination; let near: string | null = null;
     const ray = new THREE.Raycaster(); const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); const pointer = new THREE.Vector2();
-    const click = (e: PointerEvent) => { if (live.current.paused) return; const rect = el.getBoundingClientRect(); pointer.set((e.clientX - rect.left) / rect.width * 2 - 1, -(e.clientY - rect.top) / rect.height * 2 + 1); ray.setFromCamera(pointer, camera); const hit = new THREE.Vector3(); if (ray.ray.intersectPlane(plane, hit)) { target = hit; target.x = THREE.MathUtils.clamp(target.x, -12, 12); target.z = THREE.MathUtils.clamp(target.z, -15, 15); } };
+    let orbitYaw = 0; let dragging = false; let dragX = 0;
+    const click = (e: PointerEvent) => { if (live.current.paused) return; if (e.button === 2 && live.current.cameraMode === 'third-person') { dragging = true; dragX = e.clientX; renderer.domElement.setPointerCapture(e.pointerId); return; } if (e.button !== 0) return; const rect = el.getBoundingClientRect(); pointer.set((e.clientX - rect.left) / rect.width * 2 - 1, -(e.clientY - rect.top) / rect.height * 2 + 1); ray.setFromCamera(pointer, camera); const hit = new THREE.Vector3(); if (ray.ray.intersectPlane(plane, hit)) { target = hit; target.x = THREE.MathUtils.clamp(target.x, -12, 12); target.z = THREE.MathUtils.clamp(target.z, -15, 15); } };
+    const drag = (e: PointerEvent) => { if (dragging && !live.current.paused && live.current.cameraMode === 'third-person') { orbitYaw -= (e.clientX - dragX) * .007; dragX = e.clientX; } };
+    const endDrag = () => { dragging = false; };
+    const context = (e: MouseEvent) => { if (live.current.cameraMode === 'third-person') e.preventDefault(); };
     const down = (e: KeyboardEvent) => { if (live.current.paused || (e.target as HTMLElement)?.matches('input,textarea')) return; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); keys.add(e.key.toLowerCase()); if (e.key.toLowerCase() === 'e' && near) live.current.onInteract(near); };
-    const up = (e: KeyboardEvent) => keys.delete(e.key.toLowerCase()); const blur = () => keys.clear();
+    const up = (e: KeyboardEvent) => keys.delete(e.key.toLowerCase()); const blur = () => { keys.clear(); endDrag(); };
     window.addEventListener('keydown', down); window.addEventListener('keyup', up); window.addEventListener('blur', blur); renderer.domElement.addEventListener('pointerdown', click);
-    const resize = () => { const w = el.clientWidth; const h = el.clientHeight; renderer.setSize(w, h); camera.aspect = w / h; camera.position.set(27, 33, 36).multiplyScalar(w / h < 1 ? 1.4 : 1); camera.updateProjectionMatrix(); camera.lookAt(0, 0, 0); };
+    renderer.domElement.addEventListener('pointermove', drag); renderer.domElement.addEventListener('pointerup', endDrag); renderer.domElement.addEventListener('pointercancel', endDrag); renderer.domElement.addEventListener('contextmenu', context);
+    const overheadPosition = new THREE.Vector3(27, 33, 36);
+    const resize = () => { const w = el.clientWidth; const h = Math.max(1, el.clientHeight); renderer.setSize(w, h); camera.aspect = w / h; overheadPosition.set(27, 33, 36).multiplyScalar(w / h < 1 ? 1.4 : 1); camera.updateProjectionMatrix(); if (live.current.cameraMode === 'overhead') { camera.position.copy(overheadPosition); camera.lookAt(0, 0, 0); } };
     const ro = new ResizeObserver(resize); ro.observe(el); resize();
     let frame = 0; let previous = performance.now(); const v = new THREE.Vector3();
+    let lastCameraMode: CameraMode | null = null;
+    const cameraTarget = new THREE.Vector3(), desiredCamera = new THREE.Vector3(), cameraDirection = new THREE.Vector3();
+    const cameraRay = new THREE.Raycaster();
     const valid = (x: number, z: number) => Math.abs(x) < 12.5 && Math.abs(z) < 15.5 && !obstacles.some(o => Math.abs(x - o.x) < o.w + .3 && Math.abs(z - o.z) < o.d + .3);
     const animate = (now: number) => {
       frame = requestAnimationFrame(animate); const dt = Math.min((now - previous) / 1000, .05); previous = now;
+      const thirdPerson = live.current.cameraMode === 'third-person';
+      if (lastCameraMode !== live.current.cameraMode) { target = null; dragging = false; }
       if (live.current.destination !== lastDestination) { lastDestination = live.current.destination; if (lastDestination) target = new THREE.Vector3(lastDestination[0], 0, lastDestination[1]); }
       if (!live.current.paused) {
         v.set(0, 0, 0);
         if (keys.has('w') || keys.has('arrowup')) v.z -= 1; if (keys.has('s') || keys.has('arrowdown')) v.z += 1;
         if (keys.has('a') || keys.has('arrowleft')) v.x -= 1; if (keys.has('d') || keys.has('arrowright')) v.x += 1;
-        if (v.lengthSq()) { target = null; v.applyAxisAngle(new THREE.Vector3(0, 1, 0), .644); }
+        if (thirdPerson) { if (keys.has('q')) orbitYaw += dt * 1.8; if (keys.has('r')) orbitYaw -= dt * 1.8; }
+        if (v.lengthSq()) { target = null; v.applyAxisAngle(new THREE.Vector3(0, 1, 0), thirdPerson ? orbitYaw : .644); }
         else if (target) { v.subVectors(target, player.position); v.y = 0; if (v.length() < .2) { target = null; v.set(0, 0, 0); } }
         if (v.lengthSq()) { v.normalize(); const step = dt * (keys.has('shift') ? 7 : 4.6); const nx = player.position.x + v.x * step; const nz = player.position.z + v.z * step;
           if (valid(nx, player.position.z)) player.position.x = nx; if (valid(player.position.x, nz)) player.position.z = nz;
@@ -94,9 +109,26 @@ export default function World(props: WorldProps) {
       beam.position.y = 2.7 + Math.sin(now * .003) * .1;
       stationMeshes.forEach((s, i) => { const done = live.current.solved.includes(s.id); const unlocked = isUnlocked(challenges[i], live.current.solved); s.glow.color.set(done ? '#68f5d2' : unlocked ? challenges[i].color : '#43526a'); s.glow.emissive.copy(s.glow.color); s.glow.emissiveIntensity = done ? 1.5 : unlocked ? .7 + Math.sin(now * .002 + i) * .2 : .12; s.ring.visible = unlocked; });
       exitGlow.color.set(live.current.solved.length === challenges.length ? '#68f5d2' : '#415465'); exitGlow.emissive.copy(exitGlow.color); exitGlow.emissiveIntensity = live.current.solved.length === challenges.length ? 1 : 0;
+      if (thirdPerson) {
+        cameraTarget.copy(player.position); cameraTarget.y += 1.25;
+        desiredCamera.set(Math.sin(orbitYaw) * 7.5, 4.8, Math.cos(orbitYaw) * 7.5).add(player.position);
+        // Pull the camera forward when a rack or console blocks the player.
+        scene.updateMatrixWorld(true);
+        cameraDirection.subVectors(desiredCamera, cameraTarget); const distance = cameraDirection.length(); cameraDirection.normalize();
+        cameraRay.set(cameraTarget, cameraDirection); cameraRay.far = distance;
+        const hit = cameraRay.intersectObjects(cameraBlockers, false)[0];
+        if (hit) desiredCamera.copy(cameraTarget).addScaledVector(cameraDirection, Math.max(.25, hit.distance - .25));
+        // Snap inward to avoid clipping; ease outward and follow motion smoothly.
+        if (lastCameraMode !== live.current.cameraMode || hit) camera.position.copy(desiredCamera);
+        else camera.position.lerp(desiredCamera, 1 - Math.exp(-12 * dt));
+        camera.lookAt(cameraTarget);
+      } else { camera.position.copy(overheadPosition); camera.lookAt(0, 0, 0); }
+      const fov = thirdPerson ? 60 : 42;
+      if (camera.fov !== fov) { camera.fov = fov; camera.updateProjectionMatrix(); }
+      lastCameraMode = live.current.cameraMode;
       renderer.render(scene, camera);
     }; frame = requestAnimationFrame(animate);
-    return () => { cancelAnimationFrame(frame); ro.disconnect(); window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', blur); renderer.domElement.removeEventListener('pointerdown', click); geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); textures.forEach(t => t.dispose()); grid.geometry.dispose(); (grid.material as THREE.Material).dispose(); renderer.dispose(); renderer.domElement.remove(); keys.clear(); };
+    return () => { cancelAnimationFrame(frame); ro.disconnect(); window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', blur); renderer.domElement.removeEventListener('pointerdown', click); renderer.domElement.removeEventListener('pointermove', drag); renderer.domElement.removeEventListener('pointerup', endDrag); renderer.domElement.removeEventListener('pointercancel', endDrag); renderer.domElement.removeEventListener('contextmenu', context); geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); textures.forEach(t => t.dispose()); grid.geometry.dispose(); (grid.material as THREE.Material).dispose(); renderer.dispose(); renderer.domElement.remove(); keys.clear(); };
   }, []);
   return <div className="world" ref={host} aria-label="3D facility. Use WASD or arrow keys to move, E to interact. Click the floor to walk." />;
 }
