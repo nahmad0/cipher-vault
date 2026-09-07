@@ -6,12 +6,13 @@ Prepared for **nahmad0**. The repository is `https://github.com/nahmad0/cipher-v
 
 | Site | Repository | Address |
 | --- | --- | --- |
-| Existing cybersecurity newsletter | `nahmad0.github.io` | `https://nahmad0.github.io/` |
+| Main website directory | `nahmad0.github.io` | `https://nahmad0.github.io/` |
+| Preserved cybersecurity newsletter | `nahmad0.github.io` | `https://nahmad0.github.io/newsletter.html` |
 | Existing personal portfolio | Existing `nallimi` project | `https://nahmad0.github.io/nallimi/` |
 | New Cipher Vault game | Create `cipher-vault` | `https://nahmad0.github.io/cipher-vault/` |
 | Website links page, bundled with game | Same `cipher-vault` repository | `https://nahmad0.github.io/cipher-vault/websites/` |
 
-The last two addresses are planned addresses and become available only after deployment. Leave your newsletter repository in place. Publishing this game as the root site would replace the newsletter. You can later add a link from the newsletter or portfolio to the new directory.
+The root homepage is now the website directory. The original newsletter homepage is preserved as `newsletter.html`, beside its existing assets and subpages. Cipher Vault remains in its separate repository. Do not deploy the game build into the root homepage repository: update that repository's `index.html` to edit the directory, and use the game workflow for game updates.
 
 ## Why there is a separate build
 
@@ -98,11 +99,17 @@ To give it its own address such as `https://nahmad0.github.io/my-websites/`:
 
 1. First deploy the game using one of the options above.
 2. Make a copy of `public/websites/index.html` outside the game project, to use as the new repository’s root `index.html`.
-3. In that copy, change the **Cipher Vault card’s** `href="../"` to `href="https://nahmad0.github.io/cipher-vault/"`. The relative link is correct inside the game’s `/websites/` folder, but would point to your newsletter if used unchanged at `/my-websites/`.
+3. The cards already use absolute URLs, including `https://nahmad0.github.io/cipher-vault/` and `https://nahmad0.github.io/newsletter.html`, so they also work when copied to another location.
 4. Create a separate public repository called **my-websites**. Upload that `index.html` and an empty `.nojekyll` file.
 5. Choose **Settings → Pages → Deploy from a branch → main → / (root)**.
 
-Do not rename or repurpose `nahmad0.github.io`, since it already hosts the newsletter. Alternatively, you can add the directory file in a new subfolder of the newsletter’s existing publishing output, but first follow that repository’s own build process so it does not erase your addition on its next deployment.
+The main directory is already hosted at `https://nahmad0.github.io/`; a separate `my-websites` repository is optional. The root repository publishes `main` from `/` through GitHub Pages. Its original newsletter is `newsletter.html`; the CSS, JavaScript, images, videos, and cybersecurity subpages stay at the repository root. Home and Sign Up links in those subpages point to the preserved newsletter.
+
+## Update the main homepage
+
+Edit `index.html` in `nahmad0/nahmad0.github.io` and push to `main`; GitHub Pages publishes it automatically. Keep its cards in sync with the mirror at `cipher-vault/public/websites/index.html`. Updates pushed only to the game repository do not change the root homepage repository. Use absolute website addresses in both copies.
+
+The jump feature is part of Cipher Vault: press Space or the touch jump button in either camera mode. It uses a single grounded jump, no midair retrigger, and no repeated jumping while the button is held. Use the existing game workflow to publish changes to jumping or other controls.
 
 ## Add more websites
 

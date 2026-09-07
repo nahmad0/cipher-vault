@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { challenges, isUnlocked } from '../../lib/challenges';
+import { freshJump, stepJump } from '../../lib/jump';
 
 export type CameraMode = 'overhead' | 'third-person';
 export type WorldProps = { cameraMode: CameraMode; solved: string[]; paused: boolean; destination: [number, number] | null; onNear: (id: string | null) => void; onInteract: (id: string) => void; onError: () => void; movement: React.MutableRefObject<Set<string>> };
@@ -81,6 +82,7 @@ export default function World(props: WorldProps) {
     const resize = () => { const w = el.clientWidth; const h = Math.max(1, el.clientHeight); renderer.setSize(w, h); camera.aspect = w / h; overheadPosition.set(27, 33, 36).multiplyScalar(w / h < 1 ? 1.4 : 1); camera.updateProjectionMatrix(); if (live.current.cameraMode === 'overhead') { camera.position.copy(overheadPosition); camera.lookAt(0, 0, 0); } };
     const ro = new ResizeObserver(resize); ro.observe(el); resize();
     let frame = 0; let previous = performance.now(); const v = new THREE.Vector3();
+    let jump = freshJump();
     let lastCameraMode: CameraMode | null = null;
     const cameraTarget = new THREE.Vector3(), desiredCamera = new THREE.Vector3(), cameraDirection = new THREE.Vector3();
     const cameraRay = new THREE.Raycaster();
@@ -91,6 +93,9 @@ export default function World(props: WorldProps) {
       if (lastCameraMode !== live.current.cameraMode) { target = null; dragging = false; }
       if (live.current.destination !== lastDestination) { lastDestination = live.current.destination; if (lastDestination) target = new THREE.Vector3(lastDestination[0], 0, lastDestination[1]); }
       if (!live.current.paused) {
+        jump = stepJump(jump, keys.has(' '), dt);
+        player.position.y = jump.height;
+        halo.position.y = .08 - jump.height;
         v.set(0, 0, 0);
         if (keys.has('w') || keys.has('arrowup')) v.z -= 1; if (keys.has('s') || keys.has('arrowdown')) v.z += 1;
         if (keys.has('a') || keys.has('arrowleft')) v.x -= 1; if (keys.has('d') || keys.has('arrowright')) v.x += 1;
@@ -130,5 +135,5 @@ export default function World(props: WorldProps) {
     }; frame = requestAnimationFrame(animate);
     return () => { cancelAnimationFrame(frame); ro.disconnect(); window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', blur); renderer.domElement.removeEventListener('pointerdown', click); renderer.domElement.removeEventListener('pointermove', drag); renderer.domElement.removeEventListener('pointerup', endDrag); renderer.domElement.removeEventListener('pointercancel', endDrag); renderer.domElement.removeEventListener('contextmenu', context); geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); textures.forEach(t => t.dispose()); grid.geometry.dispose(); (grid.material as THREE.Material).dispose(); renderer.dispose(); renderer.domElement.remove(); keys.clear(); };
   }, []);
-  return <div className="world" ref={host} aria-label="3D facility. Use WASD or arrow keys to move, E to interact. Click the floor to walk." />;
+  return <div className="world" ref={host} aria-label="3D facility. Use WASD or arrow keys to move, Space to jump, E to interact. Click the floor to walk." />;
 }

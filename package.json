@@ -13,7 +13,7 @@
     "format": "oxfmt",
     "build:pages": "vite build --config vite.pages.config.ts",
     "preview:pages": "vite preview --config vite.pages.config.ts --host 127.0.0.1",
-    "test": "node --test --test-isolation=none tests/challenges.test.mjs",
+    "test": "node --test --test-isolation=none tests/*.test.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

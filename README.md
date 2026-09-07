@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-Open the Local URL printed by the server. WASD / arrows move relative to the camera, Shift runs, clicking the floor walks directly toward that point, and E opens nearby consoles. Click movement is direct steering, not obstacle-aware pathfinding; use intermediate floor clicks or keyboard movement to navigate around racks. Touch controls are available on narrow screens. Escape closes panels. If WebGL is unavailable, objective buttons offer the same labs without 3D movement.
+Open the Local URL printed by the server. WASD / arrows move relative to the camera, Shift runs, Space jumps, clicking the floor walks directly toward that point, and E opens nearby consoles. Click movement is direct steering, not obstacle-aware pathfinding; use intermediate floor clicks or keyboard movement to navigate around racks. Touch controls are available on narrow screens. Escape closes panels. If WebGL is unavailable, objective buttons offer the same labs without 3D movement.
 
 ## Validate
 
@@ -50,3 +50,5 @@ Use the on-screen camera selector or press V to switch between the original over
 - [Personal website directory](public/websites/index.html): newsletter, portfolio, and Cipher Vault in one standalone HTML page.
 
 For GitHub Pages, run `npm run build:pages` and publish `dist-pages/`, or use the included `.github/workflows/deploy-pages.yml`. The existing `npm run build` remains the Sites/Worker target. Use Node.js 24 for both targets. `npm test` and `npm run typecheck` provide the standard checks. The local directory is available at `/websites/` and from the game header.
+
+The main landing page is https://nahmad0.github.io/. The newsletter is preserved at https://nahmad0.github.io/newsletter.html. Jump with Space or the on-screen jump button; jumps work in both views, do not repeat while held, and do not bypass obstacle collisions.

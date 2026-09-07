@@ -49,6 +49,7 @@ Open the URL printed by this second server, normally `http://127.0.0.1:4173/`. A
 | --- | --- |
 | WASD / arrow keys | Move relative to the camera |
 | Shift | Run |
+| Space / on-screen jump button | Jump (one per press; no double-jump) |
 | Left-click floor | Walk directly toward the clicked location |
 | E | Open a nearby lab or use extraction |
 | V / camera selector | Switch overhead and third-person views |
@@ -58,7 +59,7 @@ Open the URL printed by this second server, normally `http://127.0.0.1:4173/`. A
 | Escape | Close lab, help, or reset confirmation |
 | Terminal Up / Down | Browse command history |
 
-On narrow screens, on-screen movement buttons are available. Click-to-walk uses direct steering, not pathfinding; use intermediate clicks or keyboard movement around obstacles. Third-person follows the player and pulls closer when geometry blocks the line of sight. Switching views preserves the player’s position and progress, but cancels an existing walk target.
+On narrow screens, on-screen movement and jump buttons are available. Jumping works in both camera modes, returns the player to the floor, and pauses with the simulation. Holding the button does not bounce repeatedly; obstacle collisions stay in effect while jumping. Click-to-walk uses direct steering, not pathfinding; use intermediate clicks or keyboard movement around obstacles. Third-person follows the player and pulls closer when geometry blocks the line of sight. Switching views preserves the player’s position and progress, but cancels an existing walk target.
 
 If WebGL initialization fails, objective buttons provide access to the same labs without 3D movement. No account or audio permission is required. Capture sounds start muted and can be enabled with the sound button.
 
@@ -146,11 +147,12 @@ Open `public/websites/index.html`. Each website is one `<article class="card">` 
 
 The current external addresses were provided by the owner:
 
-- Newsletter: `https://nahmad0.github.io/`
+- Main directory: `https://nahmad0.github.io/`
+- Newsletter: `https://nahmad0.github.io/newsletter.html`
 - Portfolio: `https://nahmad0.github.io/nallimi/`
 - GitHub profile: `https://github.com/nahmad0`
 
-Cipher Vault uses `../` so the directory links to the game one folder above on localhost and under a GitHub repository path. If publishing the directory separately, replace the Cipher Vault card’s link with the deployed game URL. See the separate hosting guide before moving the directory to another repository.
+All project cards use absolute published URLs, so the same standalone HTML works at the main homepage and at `/cipher-vault/websites/`. The main directory lives in the `nahmad0.github.io` repository; this game repository holds a mirror. Update both copies when changing project links. The game header links to the main homepage.
 
 ## 10. Verification
 
@@ -161,7 +163,7 @@ npm run build:pages
 npm run build
 ```
 
-Tests cover prerequisite reachability, each lab’s solvability, invalid terminal input, hint scoring, corrupted save recovery, and duplicate/unknown solved IDs. Production builds check both deployment targets. These checks do not replace a manual browser playthrough, touch-device testing, accessibility review, or load testing.
+Tests cover prerequisite reachability, each lab’s solvability, invalid terminal input, hint scoring, corrupted save recovery, duplicate/unknown solved IDs, jump landing, held-button behavior, and prevention of midair retriggering. Production builds check both deployment targets. These checks do not replace a manual browser playthrough, touch-device testing, accessibility review, or load testing.
 
 For a manual release check: enter both camera modes, rotate and move near racks, solve the two initial labs, verify unlocks, reveal a hint, reload to verify persistence, finish extraction, and test reset. For GitHub Pages, also verify the game at `/cipher-vault/`, the directory at `/cipher-vault/websites/`, and every card destination.
 
@@ -184,4 +186,4 @@ Multiplayer, real attack targets, hosted lab containers, global leaderboards, cr
 | Progress differs across hosts | Saves are local to each browser origin |
 | 3D unavailable | Enable browser hardware acceleration if supported; use fallback lab buttons |
 | GitHub game missing CSS or scripts | Deploy `dist-pages`, not source or the Worker `dist` folder |
-| Newsletter disappears | A different site was deployed to `nahmad0.github.io`; use a separate project repository |
+| Looking for the old newsletter homepage | Open `https://nahmad0.github.io/newsletter.html`; its assets and subpages remain in the root repository |
