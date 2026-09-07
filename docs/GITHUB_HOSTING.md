@@ -1,6 +1,6 @@
 # Host Cipher Vault and your website directory on GitHub
 
-Prepared for **nahmad0**. This guide prepares publication; it does not mean a GitHub repository has been created or a site deployed.
+Prepared for **nahmad0**. The repository is `https://github.com/nahmad0/cipher-vault`. Use its Actions tab and Pages settings to check deployment status; the instructions below also explain how to reproduce the setup.
 
 ## Recommended layout
 
@@ -129,4 +129,5 @@ GitHub UI labels and workflow requirements were checked against these official g
 - [Configuring a publishing source](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
 - [Using custom workflows with GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)
 
-A GitHub connection to the assistant is optional for these manual steps. If you want the assistant to create the repository or publish for you, authorize that separately and connect the intended GitHub account if its tools are not already available. No GitHub upload or publication is performed just by reading this guide.
+A GitHub connection to the assistant is optional for these manual steps. If you want the assistant to create the repository or publish for you, authorize that separately and connect the intended GitHub account if its tools are not already available. Publication occurs when the configured deployment workflow runs or built files are uploaded.
+
